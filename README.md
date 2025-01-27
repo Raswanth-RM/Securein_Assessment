@@ -33,4 +33,8 @@ To get started with this project, follow the steps below:
    ```bash
    git clone https://github.com/yourusername/Securein_Assesment.git
    cd securein
-   
+
+## Output Screenshots
+![Screenshot 2025-01-27 134012](https://github.com/user-attachments/assets/06fbd28b-6737-421d-95ff-20d00b1624d8)
+
+![Screenshot 2025-01-27 142642](https://github.com/user-attachments/assets/2ce0254c-9d04-479b-9c70-37576501bea3)
