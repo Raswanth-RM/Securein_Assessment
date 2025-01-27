@@ -35,6 +35,8 @@ To get started with this project, follow the steps below:
    cd securein
 
 ## Output Screenshots
-![Screenshot 2025-01-27 134012](https://github.com/user-attachments/assets/06fbd28b-6737-421d-95ff-20d00b1624d8)
+![Screenshot 2025-01-27 171555](https://github.com/user-attachments/assets/310193ab-84f2-49ec-b3f2-ebab329b67d8)
+![Screenshot 2025-01-27 171623](https://github.com/user-attachments/assets/ca7d26f2-f94b-42f8-8009-c517937c28e1)
+![Screenshot 2025-01-27 170906](https://github.com/user-attachments/assets/c7351865-dad5-4614-9cf2-0e7d0c683eef)
 
-![Screenshot 2025-01-27 142642](https://github.com/user-attachments/assets/2ce0254c-9d04-479b-9c70-37576501bea3)
+
