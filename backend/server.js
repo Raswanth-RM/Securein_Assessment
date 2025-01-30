@@ -1,74 +1,65 @@
 const express = require('express');
-const axios = require('axios');
-const cron = require('node-cron');
+const mongoose = require('mongoose');
+const cors = require('cors');
 const app = express();
-const PORT = 5000;
+const port = 5001;
 
-app.use(express.json());
-
-// Function to fetch and store CVEs
-const fetchAndStoreCVEs = async () => {
-  try {
-    const response = await axios.get('https://services.nvd.nist.gov/rest/json/cves/2.0');
-    const data = response.data;
-    if (!data.result || !data.result.CVE_Items) {
-      throw new Error('Invalid data from NIST API');
-    }
-
-    // Data Cleansing
-    const cleanedData = data.result.CVE_Items.map(cve => ({
-      id: cve.cve.id,
-      sourceIdentifier: cve.cve.sourceIdentifier,
-      published: new Date(cve.cve.published).toISOString().split('T')[0], // Format date
-      lastModified: new Date(cve.cve.lastModified).toISOString().split('T')[0], // Format date
-      vulnStatus: cve.cve.vulnStatus,
-      descriptions: cve.cve.descriptions.filter(desc => desc.lang === 'en'), // Filter English descriptions
-      metrics: cve.metrics
-    }));
-
-    // Store cleanedData in your database here
-    console.log('CVEs fetched and stored successfully');
-
-  } catch (err) {
-    console.error('Error fetching data:', err.message);
-  }
-};
-
-// Schedule the task to run every hour
-cron.schedule('0 * * * *', fetchAndStoreCVEs);
-
-app.get('/cves/list', async (req, res) => {
-  try {
-    const response = await axios.get('https://services.nvd.nist.gov/rest/json/cves/2.0');
-
-    const data = response.data;
-    if (!data.result || !data.result.CVE_Items) {
-      throw new Error('Invalid data from NIST API');
-    }
-
-    // Data Cleansing
-    const cleanedData = data.result.CVE_Items.map(cve => ({
-      id: cve.cve.id,
-      sourceIdentifier: cve.cve.sourceIdentifier,
-      published: new Date(cve.cve.published).toISOString().split('T')[0], // Format date
-      lastModified: new Date(cve.cve.lastModified).toISOString().split('T')[0], // Format date
-      vulnStatus: cve.cve.vulnStatus,
-      descriptions: cve.cve.descriptions.filter(desc => desc.lang === 'en'), // Filter English descriptions
-      metrics: cve.metrics
-    }));
-
-    res.json({
-      vulnerabilities: cleanedData, // Send the cleaned vulnerabilities data
-      totalResults: data.result.totalResults, // Send the total number of results
-    });
-
-  } catch (err) {
-    console.error('Error fetching data:', err.message); // Log the error for debugging
-    res.status(500).json({ message: 'Failed to fetch data from NIST API', error: err.message });
-  }
+mongoose.connect('mongodb://localhost:27017/cveDatabase', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const cveSchema = new mongoose.Schema({
+    cve: {
+        id: String,
+        sourceIdentifier: String,
+        published: Date,
+        lastModified: Date,
+        status: String
+    }
+});
+
+const CVE = mongoose.model('CVE', cveSchema);
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/cves/list', async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        
+        // Fetch the CVEs from the database with pagination
+        const cves = await CVE.find()
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit));
+
+        // Data cleansing: Remove any records with missing necessary fields
+        const cleanedCves = cves.filter(cve => {
+            // Ensure each CVE has an ID, published date, and status
+            return cve.cve && cve.cve.id && cve.cve.published && cve.cve.status;
+        });
+
+        // Optional: Format dates to ISO format (if necessary)
+        cleanedCves.forEach(cve => {
+            if (cve.cve.published) {
+                cve.cve.published = new Date(cve.cve.published).toISOString(); // Convert to ISO string if not already
+            }
+            if (cve.cve.lastModified) {
+                cve.cve.lastModified = new Date(cve.cve.lastModified).toISOString(); // Same for lastModified
+            }
+        });
+
+        // Get the total count of CVEs for pagination
+        const totalRecords = await CVE.countDocuments();
+
+        // Send the cleaned and paginated response
+        res.json({ totalRecords, results: cleanedCves });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to fetch CVEs' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
