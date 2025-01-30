@@ -7,7 +7,6 @@ app.use(express.json());
 
 app.get('/cves/list', async (req, res) => {
   try {
-    
     const response = await axios.get('https://services.nvd.nist.gov/rest/json/cves/2.0');
 
     const data = response.data;
@@ -15,8 +14,19 @@ app.get('/cves/list', async (req, res) => {
       throw new Error('Invalid data from NIST API');
     }
 
+    // Data Cleansing
+    const cleanedData = data.result.CVE_Items.map(cve => ({
+      id: cve.cve.id,
+      sourceIdentifier: cve.cve.sourceIdentifier,
+      published: new Date(cve.cve.published).toISOString().split('T')[0], // Format date
+      lastModified: new Date(cve.cve.lastModified).toISOString().split('T')[0], // Format date
+      vulnStatus: cve.cve.vulnStatus,
+      descriptions: cve.cve.descriptions.filter(desc => desc.lang === 'en'), // Filter English descriptions
+      metrics: cve.metrics
+    }));
+
     res.json({
-      vulnerabilities: data.result.CVE_Items, // Send the vulnerabilities data
+      vulnerabilities: cleanedData, // Send the cleaned vulnerabilities data
       totalResults: data.result.totalResults, // Send the total number of results
     });
 
