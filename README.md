@@ -18,6 +18,30 @@ This is a simple web application built using React, which fetches and displays C
 - **Routing**: React Router
 - **State Management**: React `useState` and `useEffect`
 
+## Backend API
+
+The backend exposes two main endpoints:
+
+### 1. `/api/cves`
+
+- **Method**: `GET`
+- **Parameters**:
+  - `page`: Page number for pagination (default: 1)
+  - `per_page`: Number of results per page (default: 10)
+  - `year`: Filter by CVE year
+  - `score`: Filter by CVSS score
+  - `modified_days`: Filter by CVE's last modified date (in days)
+  - `sort_by`: Sort results by a field (e.g., `published_date`)
+  - `sort_order`: Sort order (`asc` or `desc`)
+
+### 2. `/api/cves/<cve_id>`
+
+- **Method**: `GET`
+- **Parameters**:
+  - `cve_id`: The unique identifier of the CVE to fetch details for.
+
+
+
 ## Setup
 
 To get started with this project, follow the steps below:
